@@ -6,26 +6,437 @@
     <title>Marcador de Bingo</title>
     
     <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#007bff">
+    <link rel="icon" href="./icone.png?v=20260728" type="image/png">
+    <meta name="theme-color" content="#282c32">
+
+    <script>
+        try {
+            document.documentElement.dataset.tema = localStorage.getItem('bingoTema') || 'classico';
+            document.documentElement.dataset.marcador = localStorage.getItem('bingoCorMarcador') || 'vermelho';
+        } catch (erro) {
+            document.documentElement.dataset.tema = 'classico';
+            document.documentElement.dataset.marcador = 'vermelho';
+        }
+    </script>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #222;
-            color: #eee;
-            margin: 0;
-            padding: 15px;
+        :root {
+            --page-bg: #222222;
+            --page-text: #eeeeee;
+            --control-bg: #007bff;
+            --control-text: #ffffff;
+            --control-icon: #ffffff;
+            --undo-bg: #dc3545;
+            --mode-bg: #6c757d;
+            --clear-bg: #ffc107;
+            --clear-text: #212529;
+            --clear-icon: #212529;
+            --canvas-border: #ffffff;
+            --brush-color: #ff0000;
+            --brush-active: #ffc107;
+            --tool-bg: #333333;
+            --slider-track: #555555;
+            --card-bg: #2db3e8;
+            --card-outline: transparent;
+            --card-title: #ffffff;
+            --name-bg: #ffffff;
+            --name-text: #2db3e8;
+            --cell-bg: #ffffff;
+            --cell-text: #000000;
+            --cell-line: rgba(0, 0, 0, 0.08);
+            --free-bg: #2db3e8;
+            --free-icon: #ffffff;
+            --free-stroke: #ffffff;
+            --mark-bg: rgba(255, 0, 0, 0.78);
+            --mark-border: rgba(130, 0, 0, 0.32);
+            --panel-bg: #333333;
+            --panel-inner: #444444;
+            --panel-border: #5b5b5b;
+            --muted-text: #d4d4d4;
+            --accent: #007bff;
+            --action-bg: #007bff;
+            --danger-bg: #dc3545;
+            --pattern-opacity: 0.09;
+        }
+
+        :root[data-tema="miniapp"] {
+            --page-bg: #1e293b;
+            --page-text: #f8fafc;
+            --control-bg: #334155;
+            --control-icon: #f97316;
+            --undo-bg: #25344a;
+            --mode-bg: #334155;
+            --clear-bg: #334155;
+            --clear-text: #f8fafc;
+            --clear-icon: #f97316;
+            --canvas-border: #f97316;
+            --brush-color: #f97316;
+            --brush-active: #f97316;
+            --tool-bg: #25344a;
+            --slider-track: #475569;
+            --card-bg: #334155;
+            --card-outline: #f97316;
+            --card-title: #f8fafc;
+            --name-bg: #475569;
+            --name-text: #f8fafc;
+            --cell-bg: #475569;
+            --cell-text: #f8fafc;
+            --cell-line: #5c6b80;
+            --free-bg: #9a4618;
+            --free-icon: #f8fafc;
+            --free-stroke: #fed7aa;
+            --mark-bg: rgba(249, 115, 22, 0.48);
+            --mark-border: rgba(255, 179, 122, 0.5);
+            --panel-bg: #334155;
+            --panel-inner: #475569;
+            --panel-border: #5c6b80;
+            --muted-text: #e2e8f0;
+            --accent: #f97316;
+            --action-bg: #c45e24;
+            --danger-bg: #a94e32;
+        }
+
+        :root[data-tema="rubi"] {
+            --page-bg: #2a171c;
+            --page-text: #fff3f5;
+            --control-bg: #8e2f3d;
+            --control-icon: #ffd7dc;
+            --undo-bg: #5f202b;
+            --mode-bg: #66313a;
+            --clear-bg: #6f2732;
+            --clear-text: #fff3f5;
+            --clear-icon: #ffb5c0;
+            --canvas-border: #c94d5d;
+            --brush-color: #d94b5e;
+            --brush-active: #f08b98;
+            --tool-bg: #3d2027;
+            --slider-track: #68404a;
+            --card-bg: #9e3442;
+            --card-outline: #d86b78;
+            --card-title: #fff4f6;
+            --name-bg: #f2d8dc;
+            --name-text: #6f1f2c;
+            --cell-bg: #f0d9dd;
+            --cell-text: #42131b;
+            --cell-line: #d8b3ba;
+            --free-bg: #681f2b;
+            --free-icon: #fff3f5;
+            --free-stroke: #ffc5ce;
+            --mark-bg: rgba(151, 24, 43, 0.52);
+            --mark-border: rgba(106, 11, 28, 0.42);
+            --panel-bg: #512832;
+            --panel-inner: #6b3944;
+            --panel-border: #87515d;
+            --muted-text: #f1dbe0;
+            --accent: #cf5262;
+            --action-bg: #a63847;
+            --danger-bg: #7b2633;
+        }
+
+        :root[data-tema="oceano"] {
+            --page-bg: #102631;
+            --page-text: #effbff;
+            --control-bg: #176b87;
+            --control-icon: #bdeeff;
+            --undo-bg: #154d63;
+            --mode-bg: #285d70;
+            --clear-bg: #225b70;
+            --clear-text: #effbff;
+            --clear-icon: #aeeaff;
+            --canvas-border: #27a5ca;
+            --brush-color: #1596bd;
+            --brush-active: #7bd8f2;
+            --tool-bg: #183b49;
+            --slider-track: #356778;
+            --card-bg: #1d7898;
+            --card-outline: #61c2df;
+            --card-title: #f2fcff;
+            --name-bg: #d8edf3;
+            --name-text: #15556d;
+            --cell-bg: #d8edf3;
+            --cell-text: #0b3443;
+            --cell-line: #acd2de;
+            --free-bg: #0e566f;
+            --free-icon: #effbff;
+            --free-stroke: #bdeeff;
+            --mark-bg: rgba(9, 105, 138, 0.5);
+            --mark-border: rgba(4, 72, 95, 0.4);
+            --panel-bg: #214758;
+            --panel-inner: #356778;
+            --panel-border: #4d8294;
+            --muted-text: #d6eef5;
+            --accent: #27a5ca;
+            --action-bg: #176b87;
+            --danger-bg: #8f3e46;
+        }
+
+        :root[data-tema="esmeralda"] {
+            --page-bg: #14271f;
+            --page-text: #effbf5;
+            --control-bg: #28745b;
+            --control-icon: #c2f1dd;
+            --undo-bg: #235541;
+            --mode-bg: #365f50;
+            --clear-bg: #2e604e;
+            --clear-text: #effbf5;
+            --clear-icon: #bde9d5;
+            --canvas-border: #43a77f;
+            --brush-color: #2f946d;
+            --brush-active: #83d5b3;
+            --tool-bg: #213c31;
+            --slider-track: #466b5d;
+            --card-bg: #2d8062;
+            --card-outline: #68bc9a;
+            --card-title: #f3fcf8;
+            --name-bg: #dcece5;
+            --name-text: #205c46;
+            --cell-bg: #dcece5;
+            --cell-text: #173c2e;
+            --cell-line: #b6d3c7;
+            --free-bg: #205b45;
+            --free-icon: #effbf5;
+            --free-stroke: #c2f1dd;
+            --mark-bg: rgba(20, 113, 78, 0.5);
+            --mark-border: rgba(10, 75, 52, 0.4);
+            --panel-bg: #29483c;
+            --panel-inner: #466b5d;
+            --panel-border: #608576;
+            --muted-text: #d9eee5;
+            --accent: #43a77f;
+            --action-bg: #28745b;
+            --danger-bg: #8c4045;
+        }
+
+        :root[data-tema="violeta"] {
+            --page-bg: #241d32;
+            --page-text: #f8f3ff;
+            --control-bg: #6e4e9a;
+            --control-icon: #e6d3ff;
+            --undo-bg: #4e386d;
+            --mode-bg: #594572;
+            --clear-bg: #594273;
+            --clear-text: #f8f3ff;
+            --clear-icon: #ddc7f7;
+            --canvas-border: #9b77c9;
+            --brush-color: #865eb8;
+            --brush-active: #c9a9ef;
+            --tool-bg: #352944;
+            --slider-track: #5f506f;
+            --card-bg: #7656a1;
+            --card-outline: #aa86d4;
+            --card-title: #fbf8ff;
+            --name-bg: #e8e0f1;
+            --name-text: #553b76;
+            --cell-bg: #e8e0f1;
+            --cell-text: #342345;
+            --cell-line: #cbbddc;
+            --free-bg: #4e3470;
+            --free-icon: #f8f3ff;
+            --free-stroke: #e6d3ff;
+            --mark-bg: rgba(103, 64, 151, 0.5);
+            --mark-border: rgba(67, 39, 101, 0.4);
+            --panel-bg: #413451;
+            --panel-inner: #5f506f;
+            --panel-border: #796a88;
+            --muted-text: #e9def5;
+            --accent: #9b77c9;
+            --action-bg: #6e4e9a;
+            --danger-bg: #91445f;
+        }
+
+        :root[data-tema="dourado"] {
+            --page-bg: #292317;
+            --page-text: #fff9ea;
+            --control-bg: #9b7025;
+            --control-icon: #ffe7a6;
+            --undo-bg: #6a5128;
+            --mode-bg: #6d5c3b;
+            --clear-bg: #755d2c;
+            --clear-text: #fff9ea;
+            --clear-icon: #ffe291;
+            --canvas-border: #c7973e;
+            --brush-color: #b98731;
+            --brush-active: #e0bd70;
+            --tool-bg: #3c3423;
+            --slider-track: #6d6248;
+            --card-bg: #a87a29;
+            --card-outline: #d6aa55;
+            --card-title: #fffaf0;
+            --name-bg: #eee3c6;
+            --name-text: #6d4d16;
+            --cell-bg: #eee3c6;
+            --cell-text: #45330f;
+            --cell-line: #d5c49b;
+            --free-bg: #725018;
+            --free-icon: #fff9ea;
+            --free-stroke: #ffe7a6;
+            --mark-bg: rgba(154, 103, 19, 0.5);
+            --mark-border: rgba(102, 67, 9, 0.42);
+            --panel-bg: #4b402b;
+            --panel-inner: #6d6248;
+            --panel-border: #877a5b;
+            --muted-text: #f0e5c9;
+            --accent: #c7973e;
+            --action-bg: #9b7025;
+            --danger-bg: #8f4938;
+        }
+
+        :root[data-tema="rosa"] {
+            --page-bg: #2d1e29;
+            --page-text: #fff3fa;
+            --control-bg: #a54d78;
+            --control-icon: #ffd3e8;
+            --undo-bg: #743755;
+            --mode-bg: #704b60;
+            --clear-bg: #78445e;
+            --clear-text: #fff3fa;
+            --clear-icon: #ffc9e1;
+            --canvas-border: #cb709c;
+            --brush-color: #bd5f8d;
+            --brush-active: #e8a6c6;
+            --tool-bg: #422d3b;
+            --slider-track: #72566a;
+            --card-bg: #b45884;
+            --card-outline: #da85ac;
+            --card-title: #fff6fb;
+            --name-bg: #efdae5;
+            --name-text: #793555;
+            --cell-bg: #efdae5;
+            --cell-text: #4e2138;
+            --cell-line: #d7b8c7;
+            --free-bg: #793754;
+            --free-icon: #fff3fa;
+            --free-stroke: #ffd3e8;
+            --mark-bg: rgba(164, 62, 112, 0.5);
+            --mark-border: rgba(110, 32, 70, 0.42);
+            --panel-bg: #52384a;
+            --panel-inner: #72566a;
+            --panel-border: #8b6d80;
+            --muted-text: #f0dce6;
+            --accent: #cb709c;
+            --action-bg: #a54d78;
+            --danger-bg: #8c3e50;
+        }
+
+        :root[data-tema="menta"] {
+            --page-bg: #172725;
+            --page-text: #effbf9;
+            --control-bg: #2e7b75;
+            --control-icon: #bff1ec;
+            --undo-bg: #245953;
+            --mode-bg: #38635f;
+            --clear-bg: #32645f;
+            --clear-text: #effbf9;
+            --clear-icon: #b5e9e4;
+            --canvas-border: #4ca69e;
+            --brush-color: #3a928a;
+            --brush-active: #8ad4cd;
+            --tool-bg: #223c39;
+            --slider-track: #4a6d69;
+            --card-bg: #398b84;
+            --card-outline: #70bdb6;
+            --card-title: #f3fcfb;
+            --name-bg: #dcebe9;
+            --name-text: #275e59;
+            --cell-bg: #dcebe9;
+            --cell-text: #193d39;
+            --cell-line: #b7d2cf;
+            --free-bg: #285e59;
+            --free-icon: #effbf9;
+            --free-stroke: #bff1ec;
+            --mark-bg: rgba(25, 121, 112, 0.48);
+            --mark-border: rgba(13, 81, 75, 0.4);
+            --panel-bg: #2d4946;
+            --panel-inner: #4a6d69;
+            --panel-border: #638681;
+            --muted-text: #daeeeb;
+            --accent: #4ca69e;
+            --action-bg: #2e7b75;
+            --danger-bg: #8d4147;
+        }
+
+        :root[data-tema="grafite"] {
+            --page-bg: #181a1f;
+            --page-text: #f3f4f6;
+            --control-bg: #3d414c;
+            --control-icon: #d7dbe4;
+            --undo-bg: #30333b;
+            --mode-bg: #424650;
+            --clear-bg: #3f434d;
+            --clear-text: #f3f4f6;
+            --clear-icon: #d7dbe4;
+            --canvas-border: #8f96a3;
+            --brush-color: #777f8d;
+            --brush-active: #bac0ca;
+            --tool-bg: #292c33;
+            --slider-track: #515660;
+            --card-bg: #4a4f5b;
+            --card-outline: #777e8b;
+            --card-title: #f7f7f8;
+            --name-bg: #d8dae0;
+            --name-text: #383c45;
+            --cell-bg: #d8dae0;
+            --cell-text: #252830;
+            --cell-line: #b9bdc6;
+            --free-bg: #343842;
+            --free-icon: #f3f4f6;
+            --free-stroke: #d7dbe4;
+            --mark-bg: rgba(66, 71, 82, 0.5);
+            --mark-border: rgba(35, 38, 45, 0.4);
+            --panel-bg: #30333b;
+            --panel-inner: #515660;
+            --panel-border: #686e79;
+            --muted-text: #e0e2e7;
+            --accent: #8f96a3;
+            --action-bg: #555b67;
+            --danger-bg: #814149;
+        }
+
+        * {
             box-sizing: border-box;
         }
 
+        html {
+            min-height: 100%;
+            background: var(--page-bg);
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--page-bg);
+            color: var(--page-text);
+            margin: 0;
+            padding: 15px;
+            transition: background-color 0.22s ease, color 0.22s ease;
+        }
+
+        .fundo-bingo {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            color: var(--accent);
+            opacity: var(--pattern-opacity);
+            transition: color 0.22s ease, opacity 0.22s ease;
+        }
+
+        .controles-topo, #container-virtual, #container-manual, .tema-area {
+            position: relative;
+            z-index: 1;
+        }
+
         .controles-topo {
+            position: relative;
             display: flex;
             gap: 12px;
             margin-bottom: 15px;
@@ -35,39 +446,86 @@
         }
 
         button, .input-file-btn {
-            background-color: #007bff;
-            color: white;
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            background: var(--control-bg);
+            color: var(--control-text);
             border: none;
             padding: 12px 18px;
-            border-radius: 8px;
+            border-radius: 14px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: background-color 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.18s, filter 0.18s, box-shadow 0.18s;
+            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.22);
+            -webkit-tap-highlight-color: transparent;
         }
 
-        button:hover, .input-file-btn:hover { background-color: #0056b3; }
-        #btnDesfazer { background-color: #dc3545; }
-        #btnDesfazer:hover { background-color: #c82333; }
-        #btnDesfazerVirtual { background-color: #dc3545; }
-        #btnDesfazerVirtual:hover { background-color: #c82333; }
-        #btnLimpar { background-color: #ffc107; color: #212529; }
-        #btnLimpar:hover { background-color: #e0a800; }
+        button svg, .input-file-btn svg {
+            width: 19px;
+            height: 19px;
+            flex: 0 0 19px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        button:hover, .input-file-btn:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+        }
+
+        button:active, .input-file-btn:active {
+            transform: translateY(1px);
+        }
+
+        button:focus-visible, .input-file-btn:focus-visible, input:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        #btnDesfazer, #btnDesfazerVirtual {
+            background: var(--undo-bg);
+            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.24);
+        }
+
+        #btnLimpar {
+            color: var(--clear-text);
+            background: var(--clear-bg);
+            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.22);
+        }
+
+        .input-file-btn svg {
+            color: var(--control-icon);
+        }
+
+        #btnLimpar svg {
+            color: var(--clear-icon);
+        }
 
         .input-wrapper {
             position: relative;
             overflow: hidden;
             display: inline-block;
         }
+
         .input-wrapper input[type=file] {
             font-size: 100px;
             position: absolute;
-            left: 0; top: 0; opacity: 0; cursor: pointer;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
         }
 
-        /* --- MODO MANUAL (PINCEL) --- */
+        /* MODO MANUAL: dimensões funcionais preservadas */
         #container-manual {
+            position: relative;
             display: flex;
             flex-direction: column;
             width: 100%;
@@ -76,32 +534,35 @@
         }
 
         canvas {
+            box-sizing: content-box;
             width: 90vw;
             height: 90vw;
             max-width: 500px;
             max-height: 500px;
-            border: 3px solid #fff;
-            border-radius: 12px;
+            border: 3px solid var(--canvas-border);
+            border-radius: 18px;
             background-color: #fff;
             touch-action: none;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.34);
         }
 
         .controles-baixo {
             display: flex;
             width: 100%;
             justify-content: space-between;
-            align-items: flex-end; 
+            align-items: flex-end;
             margin-top: 15px;
+            gap: 12px;
         }
 
         .ferramentas-pincel {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            background: #333;
+            background: var(--tool-bg);
             padding: 10px 15px 5px 15px;
             border-radius: 20px;
+            box-shadow: inset 0 0 0 1px var(--panel-border), 0 6px 16px rgba(0,0,0,0.22);
         }
 
         .seletor-tamanho {
@@ -112,6 +573,8 @@
         }
 
         .btn-tamanho {
+            box-sizing: content-box;
+            min-height: 35px;
             background: none;
             border: 2px solid transparent;
             padding: 0;
@@ -122,56 +585,57 @@
             width: 35px;
             height: 35px;
             border-radius: 50%;
-            transition: all 0.2s;
+            box-shadow: none;
         }
 
         .pincel-icone {
-            background-color: #ff0000;
+            background-color: var(--brush-color);
             border-radius: 50%;
             display: inline-block;
-            opacity: 0.8;
+            opacity: 0.92;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.34);
         }
 
         .btn-tamanho.ativo {
             background-color: rgba(255, 255, 255, 0.1);
-            border-color: #ffc107;
+            border-color: var(--brush-active);
         }
 
         .slider-personalizado {
             width: 100%;
             cursor: pointer;
             height: 6px;
-            background: #555;
+            background: var(--slider-track);
             border-radius: 5px;
             outline: none;
             -webkit-appearance: none;
-            margin-bottom: 22px; 
+            margin-bottom: 22px;
         }
 
         .slider-personalizado::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 14px; 
-            height: 28px; 
-            border-radius: 4px;
-            background: #ff0000;
+            width: 14px;
+            height: 28px;
+            border-radius: 5px;
+            background: var(--brush-color);
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.65);
             transform: translateY(9px);
         }
 
         .slider-personalizado::-moz-range-thumb {
             width: 14px;
             height: 28px;
-            border-radius: 4px;
-            background: #ff0000;
+            border-radius: 5px;
+            background: var(--brush-color);
             cursor: pointer;
             border: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.65);
             transform: translateY(9px);
         }
 
-        /* --- MODO VIRTUAL PADRÃO (MOBILE - MENOR) --- */
+        /* MODO VIRTUAL: larguras, grade, espaçamento e blocos preservados */
         #container-virtual {
             display: none;
             flex-direction: column;
@@ -180,13 +644,15 @@
         }
 
         .cartela-virtual-wrapper {
-            background-color: #2db3e8; 
+            background: var(--card-bg);
             padding: 12px;
-            border-radius: 4px;
-            width: 82vw; 
-            max-width: 400px; 
+            border-radius: 18px;
+            width: 82vw;
+            max-width: 400px;
             box-sizing: border-box;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            outline: 1px solid var(--card-outline);
+            outline-offset: -1px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
             display: flex;
             flex-direction: column;
         }
@@ -204,19 +670,19 @@
         }
 
         .nome-jogador {
-            background-color: #fff;
-            color: #2db3e8;
+            background: var(--name-bg);
+            color: var(--name-text);
             padding: 3px 18px;
             border-radius: 20px;
-            font-weight: bold;
-            font-size: 13px; 
+            font-weight: 800;
+            font-size: 13px;
             text-transform: uppercase;
-            font-family: serif;
+            font-family: Georgia, serif;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             transition: transform 0.1s;
         }
-        
+
         .nome-jogador:active {
             transform: scale(0.95);
         }
@@ -225,30 +691,34 @@
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             text-align: center;
-            color: #fff;
-            font-size: 34px; 
-            font-weight: bold;
-            font-family: serif;
+            color: var(--card-title);
+            font-size: 34px;
+            font-weight: 900;
+            font-family: "Segoe UI", sans-serif;
+            letter-spacing: 0.04em;
+            text-shadow: none;
         }
 
         .grade-virtual {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(5, 1fr);
-            gap: 4px; 
+            gap: 4px;
             width: 100%;
             aspect-ratio: 1 / 1;
             box-sizing: border-box;
-            background-color: #2db3e8; 
+            background-color: transparent;
         }
 
         .btn-numero {
-            background-color: #fff;
+            min-height: 0;
+            background: var(--cell-bg);
             border: none;
-            border-radius: 2px;
-            font-size: 21px; 
-            font-family: serif;
-            color: #000;
+            border-radius: 6px;
+            font-size: 21px;
+            font-family: Georgia, serif;
+            font-weight: 800;
+            color: var(--cell-text);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -258,30 +728,54 @@
             position: relative;
             padding: 0;
             overflow: hidden;
+            box-shadow: inset 0 0 0 1px var(--cell-line);
+        }
+
+        .btn-numero:hover {
+            filter: none;
+            transform: none;
         }
 
         .btn-numero span {
             position: relative;
-            z-index: 1;
+            z-index: 3;
         }
 
-        /* Cursor default para a estrela não parecer clicável */
         .btn-numero.livre {
-            background-color: #2db3e8;
-            color: #fff;
+            background: var(--free-bg);
+            color: var(--free-icon);
             font-size: 30px;
-            cursor: default; 
+            cursor: default;
+        }
+
+        .btn-numero.livre svg {
+            width: 42%;
+            height: 42%;
+            fill: var(--free-icon);
+            stroke: var(--free-stroke);
+            stroke-width: 1.3;
+            filter: none;
+        }
+
+        .btn-numero.livre span {
+            display: grid;
+            place-items: center;
+            width: 100%;
+            height: 100%;
         }
 
         .btn-numero::after {
-            content: '';
+            content: "";
             position: absolute;
-            top: 50%; left: 50%;
+            top: 50%;
+            left: 50%;
             transform: translate(-50%, -50%);
-            width: 85%; 
+            width: 85%;
             height: 85%;
             border-radius: 50%;
-            background-color: rgba(255, 0, 0, 0.85); 
+            background: var(--mark-bg);
+            border: 1px solid var(--mark-border);
+            box-shadow: none;
             opacity: 0;
             transition: opacity 0.1s;
             z-index: 2;
@@ -293,26 +787,28 @@
 
         .controles-baixo-virtual {
             display: flex;
-            width: 82vw; 
+            width: 82vw;
             max-width: 400px;
-            justify-content: space-between; 
+            justify-content: space-between;
             margin-top: 15px;
+            gap: 12px;
         }
 
         .btn-mudar-modo {
-            background-color: #6c757d;
+            background: var(--mode-bg);
             font-size: 14px;
             padding: 8px 15px;
-            border-radius: 8px;
+            border-radius: 14px;
+            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.24);
         }
-        .btn-mudar-modo:hover { background-color: #5a6268; }
 
-        /* --- TELAS DE CARREGAMENTO E CORTE --- */
+        /* TELAS DE CARREGAMENTO, CORTE E DIÁLOGOS */
         #loading-qr {
-            display: none; 
+            display: none;
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.90);
+            inset: 0;
+            background: rgba(4, 10, 19, 0.94);
+            backdrop-filter: blur(10px);
             z-index: 2000;
             flex-direction: column;
             align-items: center;
@@ -322,36 +818,42 @@
         }
 
         .spinner {
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid #007bff;
+            border: 6px solid rgba(255,255,255,0.14);
+            border-top: 6px solid var(--accent);
             border-radius: 50%;
             width: 50px;
             height: 50px;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
             margin-bottom: 15px;
+            box-shadow: none;
         }
 
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
 
         #cropper-modal {
-            display: none; 
+            display: none;
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.95);
+            inset: 0;
+            background: rgba(4, 10, 19, 0.96);
+            backdrop-filter: blur(10px);
             z-index: 1000;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            box-sizing: border-box;
         }
 
         .cropper-container-wrapper {
             width: 100%;
             max-width: 500px;
-            height: 60vh; 
-            background-color: #333;
+            height: 60vh;
+            background-color: var(--panel-bg);
             margin-bottom: 20px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 0 0 1px var(--panel-border), 0 18px 42px rgba(0,0,0,0.46);
         }
 
         #image-to-crop {
@@ -364,35 +866,289 @@
             gap: 15px;
         }
 
-        /* ==========================================================
-           MÁGICA DA RESPONSIVIDADE: DESKTOP / PC (ECRÃS MAIORES QUE 600px)
-           ========================================================== */
+        .app-dialog-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+            background: rgba(4, 10, 19, 0.82);
+        }
+
+        .app-dialog-overlay.aberto {
+            display: flex;
+            animation: dialog-fade 0.18s ease-out;
+        }
+
+        .app-dialog {
+            width: min(100%, 340px);
+            padding: 16px;
+            border-radius: 16px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
+        }
+
+        .app-dialog-icon {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            margin-bottom: 10px;
+            border-radius: 50%;
+            color: #ffffff;
+            background: var(--accent);
+            box-shadow: none;
+        }
+
+        .app-dialog-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .app-dialog h2 {
+            margin: 0 0 8px;
+            font-size: 18px;
+        }
+
+        .app-dialog p {
+            margin: 0;
+            padding: 10px 12px;
+            color: var(--muted-text);
+            background: var(--panel-inner);
+            border: 1px solid var(--panel-border);
+            border-radius: 11px;
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre-line;
+        }
+
+        .app-dialog input {
+            display: none;
+            width: 100%;
+            height: 42px;
+            margin-top: 12px;
+            padding: 0 12px;
+            color: var(--page-text);
+            background: var(--panel-inner);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            font: inherit;
+            text-transform: uppercase;
+        }
+
+        .app-dialog.tem-input input {
+            display: block;
+        }
+
+        .app-dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .app-dialog-actions button {
+            min-width: 90px;
+            min-height: 40px;
+            padding: 9px 14px;
+            border-radius: 11px;
+            font-size: 14px;
+        }
+
+        .btn-dialog-cancelar {
+            background: var(--panel-inner);
+            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.22);
+        }
+
+        .btn-dialog-confirmar {
+            background: var(--action-bg);
+        }
+
+        .btn-dialog-confirmar.perigo {
+            background: var(--danger-bg);
+        }
+
+        .tema-area {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 18px;
+            margin-bottom: 4px;
+        }
+
+        .tema-seletor {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            width: 100%;
+            min-height: 46px;
+            padding: 7px 9px 7px 12px;
+            color: var(--page-text);
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.22);
+        }
+
+        .tema-seletor > svg {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 18px;
+            color: var(--accent);
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .tema-seletor > span {
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .tema-seletor select {
+            min-width: 0;
+            flex: 1;
+            height: 34px;
+            margin-left: auto;
+            padding: 0 30px 0 10px;
+            color: var(--page-text);
+            background: var(--panel-inner);
+            border: 1px solid var(--panel-border);
+            border-radius: 9px;
+            font: 600 13px "Segoe UI", sans-serif;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .tema-seletor select:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .tema-seletor option {
+            color: var(--page-text);
+            background: var(--panel-bg);
+        }
+
+        @keyframes dialog-fade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 390px) {
+            body {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .controles-topo {
+                gap: 8px;
+            }
+
+            button, .input-file-btn {
+                padding-left: 12px;
+                padding-right: 12px;
+                font-size: 14px;
+            }
+        }
+
         @media (min-width: 600px) {
             .cartela-virtual-wrapper {
-                width: 90vw; 
-                max-width: 500px; 
+                width: 90vw;
+                max-width: 500px;
             }
+
             .nome-jogador {
-                font-size: 14px; 
+                font-size: 14px;
                 padding: 3px 20px;
             }
+
             .letras-bingo {
-                font-size: 38px; 
+                font-size: 38px;
             }
+
             .btn-numero {
-                font-size: 26px; 
+                font-size: 26px;
             }
+
             .btn-numero.livre {
                 font-size: 36px;
             }
+
             .controles-baixo-virtual {
-                width: 90vw; 
-                max-width: 500px; 
+                width: 90vw;
+                max-width: 500px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
             }
         }
     </style>
+    <link rel="stylesheet" href="./styles.css?v=20260728-5">
 </head>
 <body>
+
+    <svg class="bingo-background-texture" aria-hidden="true">
+        <defs>
+            <pattern id="bingo-ball-texture" width="300" height="280" patternUnits="userSpaceOnUse">
+                <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                    <g stroke-width="1.8">
+                        <circle cx="66" cy="62" r="21"></circle>
+                        <circle cx="70" cy="59" r="10"></circle>
+                        <path d="M51 52c4-7 10-11 18-12M53 75c7 6 16 7 24 3"></path>
+
+                        <circle cx="169" cy="46" r="29"></circle>
+                        <circle cx="174" cy="44" r="14"></circle>
+                        <path d="M149 31c6-9 14-13 24-13M148 62c9 10 24 13 36 6"></path>
+
+                        <circle cx="250" cy="92" r="19"></circle>
+                        <circle cx="253" cy="89" r="9"></circle>
+                        <path d="M236 83c3-6 9-10 15-10M238 103c5 5 12 6 18 3"></path>
+
+                        <circle cx="151" cy="148" r="40"></circle>
+                        <circle cx="157" cy="143" r="19"></circle>
+                        <path d="M123 126c8-12 20-19 34-19M123 170c13 14 34 18 51 9"></path>
+
+                        <circle cx="48" cy="186" r="27"></circle>
+                        <circle cx="52" cy="182" r="13"></circle>
+                        <path d="M29 172c5-9 14-14 24-14M30 205c9 8 22 10 33 4"></path>
+
+                        <circle cx="177" cy="236" r="29"></circle>
+                        <circle cx="181" cy="232" r="14"></circle>
+                        <path d="M156 220c6-9 15-14 25-14M156 254c10 9 24 11 36 5"></path>
+                    </g>
+                    <g stroke-width="1.2" opacity=".7">
+                        <path d="M30 24c11 4 20 11 26 20M207 28c12 8 21 18 27 30M228 130c9 9 15 20 17 31"></path>
+                        <path d="M96 86c12 4 22 11 29 19M77 140c9-6 20-10 31-10M207 192c12 3 22 8 31 15M91 232c12 4 22 10 30 19"></path>
+                    </g>
+                </g>
+                <g fill="currentColor" font-family="Segoe UI, Arial, sans-serif" font-weight="800" text-anchor="middle" dominant-baseline="central">
+                    <text x="70" y="59" font-size="8">90</text>
+                    <text x="174" y="44" font-size="11">44</text>
+                    <text x="253" y="89" font-size="8">66</text>
+                    <text x="157" y="143" font-size="16">88</text>
+                    <text x="52" y="182" font-size="10">33</text>
+                    <text x="181" y="232" font-size="11">55</text>
+                </g>
+            </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#bingo-ball-texture)"></rect>
+    </svg>
 
     <div id="loading-qr">
         <div class="spinner"></div>
@@ -401,10 +1157,24 @@
 
     <div class="controles-topo">
         <div class="input-wrapper">
-            <button class="input-file-btn">📁 Carregar cartela</button>
+            <button class="input-file-btn">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 7.5h6l2 2h10v9.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <path d="M3 8V5a2 2 0 0 1 2-2h4l2 2h5"></path>
+                </svg>
+                <span>Carregar cartela</span>
+            </button>
             <input type="file" id="carregarImagem" accept="image/*">
         </div>
-        <button id="btnLimpar">Limpar Tudo 🗑️</button>
+        <button id="btnLimpar">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h16"></path>
+                <path d="M9 3h6l1 4H8z"></path>
+                <path d="M6.5 7l1 14h9l1-14"></path>
+                <path d="M10 11v6M14 11v6"></path>
+            </svg>
+            <span>Limpar Tudo</span>
+        </button>
     </div>
 
     <div id="container-virtual">
@@ -421,8 +1191,20 @@
         </div>
         
         <div class="controles-baixo-virtual">
-            <button class="btn-mudar-modo" id="btnMudarManual">✏️ Mudar para Pincel</button>
-            <button id="btnDesfazerVirtual">Desfazer ↩️</button>
+            <button class="btn-mudar-modo" id="btnMudarManual">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10z"></path>
+                    <path d="M14 7l3 3M5.5 16l3 3"></path>
+                </svg>
+                <span>Mudar para Pincel</span>
+            </button>
+            <button id="btnDesfazerVirtual">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9 8L4 13l5 5"></path>
+                    <path d="M5 13h8a6 6 0 0 1 6 6"></path>
+                </svg>
+                <span>Desfazer</span>
+            </button>
         </div>
     </div>
 
@@ -438,16 +1220,183 @@
                 </div>
                 <input type="range" id="sliderPincel" class="slider-personalizado" min="5" max="115" value="20">
             </div>
-            <button id="btnDesfazer">Desfazer ↩️</button>
+            <button id="btnDesfazer">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9 8L4 13l5 5"></path>
+                    <path d="M5 13h8a6 6 0 0 1 6 6"></path>
+                </svg>
+                <span>Desfazer</span>
+            </button>
         </div>
+    </div>
+
+    <div class="theme-launcher-wrap">
+        <button id="themeLauncher" class="theme-launcher" type="button" aria-controls="themePanelOverlay" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3a9 9 0 1 0 0 18h1.2a1.8 1.8 0 0 0 0-3.6H12a1.4 1.4 0 0 1 0-2.8h2.3A6.7 6.7 0 0 0 21 7.9C21 5.2 17 3 12 3z"></path>
+            </svg>
+            <span>Escolher tema</span>
+        </button>
+        <button id="markerLauncher" class="theme-launcher marker-launcher" type="button" aria-controls="markerPanelOverlay" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="7"></circle>
+                <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+            </svg>
+            <span>Cor do marcador</span>
+        </button>
+    </div>
+
+    <div id="themePanelOverlay" class="theme-panel-overlay" role="dialog" aria-modal="true" aria-labelledby="themePanelTitle">
+        <section id="themePanel" class="theme-panel">
+            <header class="theme-panel-header">
+                <div class="theme-panel-title">
+                    <h2 id="themePanelTitle">Escolher tema</h2>
+                    <p>Toque nas opções para visualizar na hora.</p>
+                </div>
+                <button id="themePanelClose" class="theme-panel-close" type="button" aria-label="Fechar temas">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+                </button>
+            </header>
+
+            <div class="theme-list">
+                <button class="theme-option" type="button" data-theme="classico" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#2db3e8"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#e3343d"></i></span>
+                    <span>Clássico Azul</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="miniapp" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#e97935"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#3e454e"></i></span>
+                    <span>Laranja Grafite</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="rubi" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#b93648"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#f0dfe2"></i></span>
+                    <span>Rubi Branco</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="oceano" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#1684a8"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#61c6df"></i></span>
+                    <span>Oceano Gelo</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="esmeralda" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#318460"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#dceee5"></i></span>
+                    <span>Esmeralda Creme</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="violeta" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#7650a4"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#c7a6e8"></i></span>
+                    <span>Violeta Neve</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="dourado" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#b4852e"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#f4e7bd"></i></span>
+                    <span>Dourado Marfim</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="rosa" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#b75585"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#3e353a"></i></span>
+                    <span>Rosa Grafite</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="menta" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#398f87"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#dcefeb"></i></span>
+                    <span>Menta Branco</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="grafite" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#535a65"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#9aa1ac"></i></span>
+                    <span>Grafite Prata</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="grafite_azul" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#3c4654"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#4f9be9"></i></span>
+                    <span>Grafite Azul</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="grafite_lima" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#424a3a"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#9bc34a"></i></span>
+                    <span>Grafite Limão</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="azul_amarelo" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#2877c9"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#f1bd2e"></i></span>
+                    <span>Azul e Amarelo</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="vinho_dourado" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#87374a"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#cf9f4b"></i></span>
+                    <span>Vinho e Dourado</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+                <button class="theme-option" type="button" data-theme="lavanda_coral" aria-pressed="false">
+                    <span class="theme-swatches"><i style="--swatch:#8469ad"></i><i style="--swatch:#ffffff"></i><i style="--swatch:#e18176"></i></span>
+                    <span>Lavanda Coral</span>
+                    <svg class="theme-option-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6"></path></svg>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <div id="markerPanelOverlay" class="theme-panel-overlay marker-panel-overlay" role="dialog" aria-modal="true" aria-labelledby="markerPanelTitle">
+        <section id="markerPanel" class="theme-panel marker-panel">
+            <header class="theme-panel-header">
+                <div class="theme-panel-title">
+                    <h2 id="markerPanelTitle">Cor do marcador</h2>
+                </div>
+                <button id="markerPanelClose" class="theme-panel-close" type="button" aria-label="Fechar cores do marcador">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+                </button>
+            </header>
+
+            <div class="marker-list">
+                <button class="marker-option" type="button" data-marker="vermelho" aria-label="Vermelho vivo" aria-pressed="false" style="--marker-choice:#ff1f1f"></button>
+                <button class="marker-option" type="button" data-marker="azul" aria-label="Azul elétrico" aria-pressed="false" style="--marker-choice:#147cff"></button>
+                <button class="marker-option" type="button" data-marker="laranja" aria-label="Laranja vivo" aria-pressed="false" style="--marker-choice:#ff7800"></button>
+                <button class="marker-option" type="button" data-marker="verde" aria-label="Verde vivo" aria-pressed="false" style="--marker-choice:#00b866"></button>
+                <button class="marker-option" type="button" data-marker="roxo" aria-label="Roxo vivo" aria-pressed="false" style="--marker-choice:#963cff"></button>
+                <button class="marker-option" type="button" data-marker="magenta" aria-label="Magenta vivo" aria-pressed="false" style="--marker-choice:#ff2b8a"></button>
+                <button class="marker-option" type="button" data-marker="ciano" aria-label="Ciano vivo" aria-pressed="false" style="--marker-choice:#00aeea"></button>
+                <button class="marker-option" type="button" data-marker="amarelo" aria-label="Amarelo ouro" aria-pressed="false" style="--marker-choice:#f2b900"></button>
+            </div>
+        </section>
     </div>
 
     <div id="cropper-modal">
         <h3 style="margin-top:0; color:white; text-align:center;">Ajuste a sua Cartela</h3>
         <div class="cropper-container-wrapper"><img id="image-to-crop" src=""></div>
         <div class="botoes-corte">
-            <button id="btn-cancelar-corte" style="background-color: #6c757d;">Cancelar ❌</button>
-            <button id="btn-confirmar-corte" style="background-color: #28a745;">Cortar e Usar ✅</button>
+            <button id="btn-cancelar-corte" class="btn-dialog-cancelar">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18"></path>
+                </svg>
+                <span>Cancelar</span>
+            </button>
+            <button id="btn-confirmar-corte">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 12l4 4L19 6"></path>
+                </svg>
+                <span>Cortar e Usar</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="app-dialog-overlay" class="app-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="app-dialog-title" aria-describedby="app-dialog-message">
+        <div id="app-dialog" class="app-dialog">
+            <div class="app-dialog-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 8v5"></path>
+                    <path d="M12 17h.01"></path>
+                    <path d="M10.2 3.8L2.5 17.2A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.8L13.8 3.8a2 2 0 0 0-3.6 0z"></path>
+                </svg>
+            </div>
+            <h2 id="app-dialog-title"></h2>
+            <p id="app-dialog-message"></p>
+            <input id="app-dialog-input" type="text" maxlength="40" autocomplete="off">
+            <div class="app-dialog-actions">
+                <button id="app-dialog-cancelar" class="btn-dialog-cancelar">Cancelar</button>
+                <button id="app-dialog-confirmar" class="btn-dialog-confirmar">Confirmar</button>
+            </div>
         </div>
     </div>
 
@@ -472,75 +1421,603 @@
         const imageToCrop = document.getElementById('image-to-crop');
         const btnConfirmarCorte = document.getElementById('btn-confirmar-corte');
         const btnCancelarCorte = document.getElementById('btn-cancelar-corte');
+        const dialogOverlay = document.getElementById('app-dialog-overlay');
+        const dialogBox = document.getElementById('app-dialog');
+        const dialogTitle = document.getElementById('app-dialog-title');
+        const dialogMessage = document.getElementById('app-dialog-message');
+        const dialogInput = document.getElementById('app-dialog-input');
+        const dialogCancelar = document.getElementById('app-dialog-cancelar');
+        const dialogConfirmar = document.getElementById('app-dialog-confirmar');
         
         let cropper;
         let desenhando = false;
+        let resolverDialogo = null;
+        let houveInteracaoNestaSessao = false;
         
         let historico = []; 
         let historicoVirtual = []; 
+        let temporizadorLeituraCartela = null;
+        let identificadorLeituraCartela = 0;
 
-        ctx.strokeStyle = "rgba(255, 0, 0, 0.85)";
+        const TEMPO_LIMITE_LEITURA_CARTELA = 30000;
+
+        const BANCO_PERSISTENCIA = 'bingoMarcadorPersistencia';
+        const VERSAO_BANCO_PERSISTENCIA = 1;
+        const ARMAZEM_PERSISTENCIA = 'dados';
+        const CHAVE_IMAGEM_ORIGINAL = 'imagemOriginal';
+        const CHAVE_ESTADO_MANUAL = 'estadoManual';
+        const CHAVE_HISTORICO_MANUAL = 'historicoManual';
+        const CHAVES_LOCAIS_DA_PARTIDA = [
+            'bingoVirtual',
+            'bingoNomeVirtual',
+            'bingoHistoricoVirtual',
+            'bingoModo',
+            'bingoSalvoManual',
+            'bingoImagemOriginal',
+            'bingoHistoricoManual'
+        ];
+
+        let bancoPersistenciaPromise = null;
+        let filaPersistencia = Promise.resolve();
+
+        function abrirBancoPersistencia() {
+            if (!window.indexedDB) return Promise.resolve(null);
+            if (bancoPersistenciaPromise) return bancoPersistenciaPromise;
+
+            bancoPersistenciaPromise = new Promise(resolve => {
+                let pedido;
+                try {
+                    pedido = window.indexedDB.open(BANCO_PERSISTENCIA, VERSAO_BANCO_PERSISTENCIA);
+                } catch (erro) {
+                    resolve(null);
+                    return;
+                }
+
+                pedido.onupgradeneeded = () => {
+                    const banco = pedido.result;
+                    if (!banco.objectStoreNames.contains(ARMAZEM_PERSISTENCIA)) {
+                        banco.createObjectStore(ARMAZEM_PERSISTENCIA);
+                    }
+                };
+
+                pedido.onsuccess = () => {
+                    const banco = pedido.result;
+                    banco.onversionchange = () => banco.close();
+                    resolve(banco);
+                };
+
+                pedido.onerror = () => resolve(null);
+                pedido.onblocked = () => resolve(null);
+            });
+
+            return bancoPersistenciaPromise;
+        }
+
+        async function gravarDadoPersistente(chave, valor) {
+            const banco = await abrirBancoPersistencia();
+            if (!banco) return false;
+
+            return new Promise(resolve => {
+                let transacao;
+                try {
+                    transacao = banco.transaction(ARMAZEM_PERSISTENCIA, 'readwrite');
+                    transacao.objectStore(ARMAZEM_PERSISTENCIA).put(valor, chave);
+                } catch (erro) {
+                    resolve(false);
+                    return;
+                }
+
+                transacao.oncomplete = () => resolve(true);
+                transacao.onerror = () => resolve(false);
+                transacao.onabort = () => resolve(false);
+            });
+        }
+
+        async function lerDadoPersistente(chave) {
+            const banco = await abrirBancoPersistencia();
+            if (!banco) return null;
+
+            return new Promise(resolve => {
+                let pedido;
+                try {
+                    const transacao = banco.transaction(ARMAZEM_PERSISTENCIA, 'readonly');
+                    pedido = transacao.objectStore(ARMAZEM_PERSISTENCIA).get(chave);
+                } catch (erro) {
+                    resolve(null);
+                    return;
+                }
+
+                pedido.onsuccess = () => resolve(pedido.result ?? null);
+                pedido.onerror = () => resolve(null);
+            });
+        }
+
+        async function apagarDadosGrandesDaPartida() {
+            const banco = await abrirBancoPersistencia();
+            if (!banco) return false;
+
+            return new Promise(resolve => {
+                let transacao;
+                try {
+                    transacao = banco.transaction(ARMAZEM_PERSISTENCIA, 'readwrite');
+                    const armazem = transacao.objectStore(ARMAZEM_PERSISTENCIA);
+                    armazem.delete(CHAVE_IMAGEM_ORIGINAL);
+                    armazem.delete(CHAVE_ESTADO_MANUAL);
+                    armazem.delete(CHAVE_HISTORICO_MANUAL);
+                } catch (erro) {
+                    resolve(false);
+                    return;
+                }
+
+                transacao.oncomplete = () => resolve(true);
+                transacao.onerror = () => resolve(false);
+                transacao.onabort = () => resolve(false);
+            });
+        }
+
+        function enfileirarPersistencia(operacao) {
+            const tarefa = filaPersistencia
+                .catch(() => null)
+                .then(operacao)
+                .catch(() => false);
+            filaPersistencia = tarefa.then(() => null);
+            return tarefa;
+        }
+
+        function lerLocalSeguro(chave, interpretarJson = false) {
+            try {
+                const valor = localStorage.getItem(chave);
+                if (valor === null) return null;
+                return interpretarJson ? JSON.parse(valor) : valor;
+            } catch (erro) {
+                return null;
+            }
+        }
+
+        function gravarLocalSeguro(chave, valor) {
+            try {
+                localStorage.setItem(chave, valor);
+                return true;
+            } catch (erro) {
+                return false;
+            }
+        }
+
+        function removerLocalSeguro(chave) {
+            try {
+                localStorage.removeItem(chave);
+            } catch (erro) {}
+        }
+
+        async function solicitarArmazenamentoDuradouro() {
+            try {
+                if (navigator.storage && typeof navigator.storage.persist === 'function') {
+                    await navigator.storage.persist();
+                }
+            } catch (erro) {}
+        }
+
+        async function persistirImagemOriginal() {
+            const imagemParaSalvar = imagemOriginalSrc;
+            if (!imagemParaSalvar) return false;
+
+            return enfileirarPersistencia(async () => {
+                const salvouNoBanco = await gravarDadoPersistente(
+                    CHAVE_IMAGEM_ORIGINAL,
+                    imagemParaSalvar
+                );
+
+                if (salvouNoBanco) {
+                    removerLocalSeguro('bingoImagemOriginal');
+                } else {
+                    gravarLocalSeguro('bingoImagemOriginal', imagemParaSalvar);
+                }
+
+                return salvouNoBanco;
+            });
+        }
+
+        async function carregarImagemOriginalPersistida() {
+            const imagemDoBanco = await lerDadoPersistente(CHAVE_IMAGEM_ORIGINAL);
+            if (typeof imagemDoBanco === 'string' && imagemDoBanco) return imagemDoBanco;
+            return lerLocalSeguro('bingoImagemOriginal');
+        }
+
+        function persistirEstadoManual(estadoAtual) {
+            const historicoParaSalvar = historico.slice();
+
+            return enfileirarPersistencia(async () => {
+                const salvouEstado = await gravarDadoPersistente(
+                    CHAVE_ESTADO_MANUAL,
+                    estadoAtual
+                );
+                const salvouHistorico = await gravarDadoPersistente(
+                    CHAVE_HISTORICO_MANUAL,
+                    historicoParaSalvar
+                );
+
+                gravarLocalSeguro('bingoSalvoManual', estadoAtual);
+
+                if (salvouHistorico) {
+                    removerLocalSeguro('bingoHistoricoManual');
+                } else {
+                    gravarLocalSeguro(
+                        'bingoHistoricoManual',
+                        JSON.stringify(historicoParaSalvar)
+                    );
+                }
+
+                return salvouEstado && salvouHistorico;
+            });
+        }
+
+        async function carregarPersistenciaManual() {
+            let estadoAtual = await lerDadoPersistente(CHAVE_ESTADO_MANUAL);
+            let historicoSalvo = await lerDadoPersistente(CHAVE_HISTORICO_MANUAL);
+
+            if (typeof estadoAtual !== 'string' || !estadoAtual) {
+                estadoAtual = lerLocalSeguro('bingoSalvoManual');
+            }
+
+            if (!Array.isArray(historicoSalvo)) {
+                historicoSalvo = lerLocalSeguro('bingoHistoricoManual', true);
+            }
+
+            const historicoValido = Array.isArray(historicoSalvo)
+                ? historicoSalvo.filter(item => typeof item === 'string' && item)
+                : [];
+
+            if (historicoValido.length === 0 && estadoAtual) {
+                historicoValido.push(estadoAtual);
+            }
+
+            if (!estadoAtual && historicoValido.length > 0) {
+                estadoAtual = historicoValido[historicoValido.length - 1];
+            }
+
+            return { estadoAtual, historicoSalvo: historicoValido };
+        }
+
+        async function limparPersistenciaDaPartida() {
+            await enfileirarPersistencia(apagarDadosGrandesDaPartida);
+            CHAVES_LOCAIS_DA_PARTIDA.forEach(removerLocalSeguro);
+        }
+
+        ctx.strokeStyle = corDoTemaComAlpha('--brush-color', 0.85);
         ctx.lineWidth = 20; 
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
 
+        document.addEventListener('pointerdown', () => {
+            houveInteracaoNestaSessao = true;
+        }, { once: true, capture: true });
+        document.addEventListener('keydown', () => {
+            houveInteracaoNestaSessao = true;
+        }, { once: true, capture: true });
+
+        const temasDisponiveis = new Set([
+            'classico',
+            'miniapp',
+            'rubi',
+            'oceano',
+            'esmeralda',
+            'violeta',
+            'dourado',
+            'rosa',
+            'menta',
+            'grafite',
+            'grafite_azul',
+            'grafite_lima',
+            'azul_amarelo',
+            'vinho_dourado',
+            'lavanda_coral'
+        ]);
+        const coresMarcadorDisponiveis = new Set([
+            'vermelho',
+            'azul',
+            'laranja',
+            'verde',
+            'roxo',
+            'magenta',
+            'ciano',
+            'amarelo'
+        ]);
+
+        function corDoTemaComAlpha(nomeVariavel, alpha) {
+            const cor = getComputedStyle(document.documentElement)
+                .getPropertyValue(nomeVariavel)
+                .trim();
+            const hexadecimal = /^#([0-9a-f]{6})$/i.exec(cor);
+            if (!hexadecimal) return cor;
+
+            const valor = hexadecimal[1];
+            const vermelho = parseInt(valor.slice(0, 2), 16);
+            const verde = parseInt(valor.slice(2, 4), 16);
+            const azul = parseInt(valor.slice(4, 6), 16);
+            return `rgba(${vermelho}, ${verde}, ${azul}, ${alpha})`;
+        }
+
+        function aplicarTema(nomeTema, salvar = true) {
+            const tema = temasDisponiveis.has(nomeTema) ? nomeTema : 'classico';
+            document.documentElement.dataset.tema = tema;
+
+            const estilos = getComputedStyle(document.documentElement);
+            const corDoFundo = estilos.getPropertyValue('--page-bg').trim();
+            const metaTema = document.querySelector('meta[name="theme-color"]');
+            if (metaTema && corDoFundo) metaTema.content = corDoFundo;
+
+            ctx.strokeStyle = corDoTemaComAlpha('--brush-color', 0.85);
+
+            if (salvar) {
+                try {
+                    localStorage.setItem('bingoTema', tema);
+                } catch (erro) {}
+            }
+
+            document.dispatchEvent(new CustomEvent('bingo-theme-change', {
+                detail: { tema }
+            }));
+        }
+
+        function aplicarCorMarcador(nomeCor, salvar = true) {
+            const cor = coresMarcadorDisponiveis.has(nomeCor) ? nomeCor : 'vermelho';
+            document.documentElement.dataset.marcador = cor;
+            ctx.strokeStyle = corDoTemaComAlpha('--brush-color', 0.88);
+
+            if (salvar) {
+                try {
+                    localStorage.setItem('bingoCorMarcador', cor);
+                } catch (erro) {}
+            }
+
+            document.dispatchEvent(new CustomEvent('bingo-marker-change', {
+                detail: { cor }
+            }));
+        }
+
+        aplicarTema(document.documentElement.dataset.tema || 'classico', false);
+        aplicarCorMarcador(document.documentElement.dataset.marcador || 'vermelho', false);
+        window.aplicarTema = aplicarTema;
+        window.aplicarCorMarcador = aplicarCorMarcador;
+
+        function finalizarDialogo(valor) {
+            if (!resolverDialogo) return;
+            const resolver = resolverDialogo;
+            resolverDialogo = null;
+            dialogOverlay.classList.remove('aberto');
+            dialogBox.classList.remove('tem-input');
+            dialogConfirmar.classList.remove('perigo');
+            resolver(valor);
+        }
+
+        function abrirDialogo({
+            titulo,
+            mensagem,
+            valorInicial = null,
+            textoConfirmar = 'Confirmar',
+            textoCancelar = 'Cancelar',
+            perigo = false
+        }) {
+            if (resolverDialogo) finalizarDialogo(null);
+
+            dialogTitle.textContent = titulo;
+            dialogMessage.textContent = mensagem;
+            dialogConfirmar.textContent = textoConfirmar;
+            dialogCancelar.textContent = textoCancelar;
+            dialogConfirmar.classList.toggle('perigo', perigo);
+
+            const temInput = valorInicial !== null;
+            dialogBox.classList.toggle('tem-input', temInput);
+            dialogInput.value = temInput ? valorInicial : '';
+            dialogOverlay.classList.add('aberto');
+
+            requestAnimationFrame(() => {
+                if (temInput) {
+                    dialogInput.focus();
+                    dialogInput.select();
+                } else {
+                    dialogConfirmar.focus();
+                }
+            });
+
+            return new Promise(resolve => {
+                resolverDialogo = resolve;
+            });
+        }
+
+        dialogCancelar.addEventListener('click', () => finalizarDialogo(null));
+        dialogConfirmar.addEventListener('click', () => {
+            const valor = dialogBox.classList.contains('tem-input') ? dialogInput.value : true;
+            finalizarDialogo(valor);
+        });
+        dialogOverlay.addEventListener('click', (e) => {
+            if (e.target === dialogOverlay) finalizarDialogo(null);
+        });
+        document.addEventListener('keydown', (e) => {
+            if (!dialogOverlay.classList.contains('aberto')) return;
+            if (e.key === 'Escape') finalizarDialogo(null);
+            if (e.key === 'Enter' && document.activeElement === dialogInput) {
+                e.preventDefault();
+                finalizarDialogo(dialogInput.value);
+            }
+        });
+
+        function criarIconeLivre() {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '0 0 24 24');
+            svg.setAttribute('aria-hidden', 'true');
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'M12 2.8c.7 5.4 3.8 8.5 9.2 9.2-5.4.7-8.5 3.8-9.2 9.2-.7-5.4-3.8-8.5-9.2-9.2 5.4-.7 8.5-3.8 9.2-9.2z');
+            svg.appendChild(path);
+            return svg;
+        }
+
         function mudarTamanho(novoTamanho, elemento) {
             ctx.lineWidth = novoTamanho;
             sliderPincel.value = novoTamanho;
+            gravarLocalSeguro('bingoEspessuraPincel', String(novoTamanho));
             document.querySelectorAll('.btn-tamanho').forEach(btn => btn.classList.remove('ativo'));
             elemento.classList.add('ativo');
         }
 
         sliderPincel.addEventListener('input', (e) => {
             ctx.lineWidth = e.target.value;
+            gravarLocalSeguro('bingoEspessuraPincel', String(e.target.value));
             document.querySelectorAll('.btn-tamanho').forEach(btn => btn.classList.remove('ativo'));
         });
 
-        function editarNome() {
+        function restaurarEspessuraPincel() {
+            const espessuraSalva = Number(lerLocalSeguro('bingoEspessuraPincel'));
+            if (!Number.isFinite(espessuraSalva) || espessuraSalva < 5 || espessuraSalva > 115) {
+                return;
+            }
+
+            sliderPincel.value = String(espessuraSalva);
+            ctx.lineWidth = espessuraSalva;
+
+            const tamanhosPredefinidos = [7, 20, 40];
+            document.querySelectorAll('.btn-tamanho').forEach((btn, indice) => {
+                btn.classList.toggle('ativo', tamanhosPredefinidos[indice] === espessuraSalva);
+            });
+        }
+
+        async function editarNome() {
             let nomeAtual = nomeDisplay.innerText;
             if (nomeAtual === "JOGADOR") nomeAtual = "";
             
-            const novoNome = prompt("Corrija o seu nome para a cartela:", nomeAtual);
+            const novoNome = await abrirDialogo({
+                titulo: 'Corrigir nome',
+                mensagem: 'Corrija o seu nome para a cartela:',
+                valorInicial: nomeAtual,
+                textoConfirmar: 'Salvar'
+            });
             if (novoNome !== null && novoNome.trim() !== "") {
                 nomeDisplay.innerText = novoNome.trim().toUpperCase();
-                localStorage.setItem('bingoNomeVirtual', nomeDisplay.innerText);
+                gravarLocalSeguro('bingoNomeVirtual', nomeDisplay.innerText);
             }
+        }
+
+        function cancelarTempoLimiteLeitura() {
+            if (temporizadorLeituraCartela !== null) {
+                clearTimeout(temporizadorLeituraCartela);
+                temporizadorLeituraCartela = null;
+            }
+        }
+
+        async function mostrarAvisoDeLeitura(mensagem) {
+            const recarregar = await abrirDialogo({
+                titulo: 'Leitura interrompida',
+                mensagem,
+                textoConfirmar: 'Recarregar agora',
+                textoCancelar: 'Fechar'
+            });
+
+            if (recarregar) {
+                window.location.reload();
+            }
+        }
+
+        function iniciarTempoLimiteLeitura(identificador) {
+            cancelarTempoLimiteLeitura();
+            temporizadorLeituraCartela = setTimeout(() => {
+                if (identificador !== identificadorLeituraCartela) return;
+
+                identificadorLeituraCartela += 1;
+                temporizadorLeituraCartela = null;
+                loadingQr.style.display = 'none';
+                mostrarAvisoDeLeitura(
+                    'A leitura da cartela demorou mais de 30 segundos. Recarregue a página e tente novamente.'
+                );
+            }, TEMPO_LIMITE_LEITURA_CARTELA);
+        }
+
+        function concluirLeituraComErro(identificador) {
+            if (identificador !== identificadorLeituraCartela) return;
+
+            identificadorLeituraCartela += 1;
+            cancelarTempoLimiteLeitura();
+            loadingQr.style.display = 'none';
+            mostrarAvisoDeLeitura(
+                'Não foi possível carregar o leitor da cartela. Recarregue a página e tente novamente.'
+            );
         }
 
         function lerQRCode(src, callback) {
             const img = new Image();
+            let finalizado = false;
+
+            const concluir = resultado => {
+                if (finalizado) return;
+                finalizado = true;
+                callback(resultado);
+            };
+
             img.onload = () => {
-                const cvs = document.createElement('canvas');
-                cvs.width = img.width;
-                cvs.height = img.height;
-                const ctxTemp = cvs.getContext('2d');
-                ctxTemp.drawImage(img, 0, 0, cvs.width, cvs.height);
-                
-                const imageData = ctxTemp.getImageData(0, 0, cvs.width, cvs.height);
-                const codigo = jsQR(imageData.data, imageData.width, imageData.height, {
-                    inversionAttempts: "dontInvert",
-                });
-                
-                if (codigo) {
-                    callback({ sucesso: true, dados: codigo.data });
-                } else {
-                    callback({ sucesso: false });
+                try {
+                    if (typeof window.jsQR !== 'function') {
+                        throw new Error('Leitor QR indisponível');
+                    }
+
+                    const cvs = document.createElement('canvas');
+                    cvs.width = img.width;
+                    cvs.height = img.height;
+                    const ctxTemp = cvs.getContext('2d');
+                    if (!ctxTemp) throw new Error('Canvas indisponível');
+
+                    ctxTemp.drawImage(img, 0, 0, cvs.width, cvs.height);
+                    const imageData = ctxTemp.getImageData(0, 0, cvs.width, cvs.height);
+                    const codigo = window.jsQR(
+                        imageData.data,
+                        imageData.width,
+                        imageData.height,
+                        { inversionAttempts: 'dontInvert' }
+                    );
+
+                    concluir(
+                        codigo
+                            ? { sucesso: true, dados: codigo.data }
+                            : { sucesso: false }
+                    );
+                } catch (erro) {
+                    concluir({ sucesso: false, erroLeitura: true });
                 }
             };
+
+            img.onerror = () => concluir({ sucesso: false, erroLeitura: true });
             img.src = src;
         }
 
         inputImagem.addEventListener('change', function(e) {
             if (!e.target.files[0]) return;
+
+            const identificador = ++identificadorLeituraCartela;
+            loadingQr.style.display = 'flex';
+            iniciarTempoLimiteLeitura(identificador);
+            solicitarArmazenamentoDuradouro();
+
             const file = e.target.files[0];
             const reader = new FileReader();
             
-            reader.onload = function(event) {
+            reader.onload = async function(event) {
+                if (identificador !== identificadorLeituraCartela) return;
+
                 imagemOriginalSrc = event.target.result;
-                loadingQr.style.display = 'flex';
+                await persistirImagemOriginal();
+                if (identificador !== identificadorLeituraCartela) return;
                 
                 lerQRCode(imagemOriginalSrc, (resultado) => {
+                    if (identificador !== identificadorLeituraCartela) return;
+
+                    cancelarTempoLimiteLeitura();
                     loadingQr.style.display = 'none';
+
+                    if (resultado.erroLeitura) {
+                        concluirLeituraComErro(identificador);
+                        return;
+                    }
+
+                    identificadorLeituraCartela += 1;
                     
                     if(resultado.sucesso) {
                         try {
@@ -565,6 +2042,9 @@
                     }
                 });
             }
+
+            reader.onerror = () => concluirLeituraComErro(identificador);
+            reader.onabort = () => concluirLeituraComErro(identificador);
             reader.readAsDataURL(file);
             e.target.value = ''; 
         });
@@ -573,27 +2053,32 @@
             const botoes = document.querySelectorAll('.btn-numero');
             const estado = Array.from(botoes).map(btn => btn.classList.contains('marcado'));
             historicoVirtual.push(JSON.stringify(estado));
-            // Persiste o histórico virtual no armazenamento local
-            localStorage.setItem('bingoHistoricoVirtual', JSON.stringify(historicoVirtual));
+            gravarLocalSeguro('bingoHistoricoVirtual', JSON.stringify(historicoVirtual));
         }
 
         btnDesfazerVirtual.addEventListener('click', () => {
-            if (historicoVirtual.length > 0) {
+            while (historicoVirtual.length > 0) {
                 const estadoAnteriorStr = historicoVirtual.pop();
-                const estadoAnterior = JSON.parse(estadoAnteriorStr);
-                
+                let estadoAnterior;
+                try {
+                    estadoAnterior = JSON.parse(estadoAnteriorStr);
+                } catch (erro) {
+                    continue;
+                }
+
+                if (!Array.isArray(estadoAnterior)) continue;
+
                 const botoes = document.querySelectorAll('.btn-numero');
                 botoes.forEach((btn, index) => {
-                    if (estadoAnterior[index]) {
-                        btn.classList.add('marcado');
-                    } else {
-                        btn.classList.remove('marcado');
-                    }
+                    btn.classList.toggle('marcado', Boolean(estadoAnterior[index]));
                 });
-                
-                // Atualiza o histórico persistente depois do "Desfazer"
-                localStorage.setItem('bingoHistoricoVirtual', JSON.stringify(historicoVirtual));
-                salvarEstadoVirtual(); 
+
+                gravarLocalSeguro(
+                    'bingoHistoricoVirtual',
+                    JSON.stringify(historicoVirtual)
+                );
+                salvarEstadoVirtual();
+                break;
             }
         });
 
@@ -607,7 +2092,7 @@
             
             // Limpa o histórico virtual de cartelas antigas
             historicoVirtual = []; 
-            localStorage.removeItem('bingoHistoricoVirtual');
+            removerLocalSeguro('bingoHistoricoVirtual');
             
             let numIndex = 0;
 
@@ -619,7 +2104,7 @@
                 const spanText = document.createElement('span');
 
                 if(i === 12) {
-                    spanText.innerText = '★'; 
+                    spanText.appendChild(criarIconeLivre());
                     btn.classList.add('livre');
                 } else {
                     spanText.innerText = numeros[numIndex];
@@ -639,19 +2124,19 @@
                 gradeBotoes.appendChild(btn);
             }
             
-            localStorage.setItem('bingoModo', 'virtual');
-            localStorage.setItem('bingoNomeVirtual', nome);
+            gravarLocalSeguro('bingoModo', 'virtual');
+            gravarLocalSeguro('bingoNomeVirtual', nome);
             salvarEstadoVirtual();
         }
 
         function salvarEstadoVirtual() {
             const botoes = document.querySelectorAll('.btn-numero');
             const estado = Array.from(botoes).map(btn => ({
-                texto: btn.querySelector('span').innerText,
+                texto: btn.classList.contains('livre') ? '' : btn.querySelector('span').innerText,
                 marcado: btn.classList.contains('marcado'),
                 livre: btn.classList.contains('livre')
             }));
-            localStorage.setItem('bingoVirtual', JSON.stringify(estado));
+            gravarLocalSeguro('bingoVirtual', JSON.stringify(estado));
         }
 
         function restaurarEstadoVirtual(estadoSalvo, nomeSalvo) {
@@ -663,12 +2148,10 @@
             gradeBotoes.innerHTML = '';
             
             // Tenta recuperar o histórico salvo ou inicia um novo
-            const histSalvo = localStorage.getItem('bingoHistoricoVirtual');
-            if (histSalvo) {
-                historicoVirtual = JSON.parse(histSalvo);
-            } else {
-                historicoVirtual = [];
-            }
+            const histSalvo = lerLocalSeguro('bingoHistoricoVirtual', true);
+            historicoVirtual = Array.isArray(histSalvo)
+                ? histSalvo.filter(item => typeof item === 'string')
+                : [];
 
             const estado = JSON.parse(estadoSalvo);
             estado.forEach((item, i) => {
@@ -677,7 +2160,11 @@
                 btn.dataset.indice = i;
                 
                 const spanText = document.createElement('span');
-                spanText.innerText = item.texto;
+                if (item.livre) {
+                    spanText.appendChild(criarIconeLivre());
+                } else {
+                    spanText.innerText = item.texto;
+                }
                 btn.appendChild(spanText);
 
                 if(item.livre) btn.classList.add('livre');
@@ -695,19 +2182,37 @@
             });
         }
 
-        btnMudarManual.addEventListener('click', () => {
-            if(confirm("Atenção!\nAo mudar para o Modo Pincel, perderá as marcações virtuais atuais.\n\nDeseja continuar?")) {
+        btnMudarManual.addEventListener('click', async () => {
+            const confirmou = await abrirDialogo({
+                titulo: 'Atenção!',
+                mensagem: 'Ao mudar para o Modo Pincel, perderá as marcações virtuais atuais.\n\nDeseja continuar?',
+                perigo: true
+            });
+            if (confirmou) {
+                if (!imagemOriginalSrc) {
+                    imagemOriginalSrc = await carregarImagemOriginalPersistida();
+                }
+
                 if(imagemOriginalSrc) {
                     iniciarModoManualPlanoB(imagemOriginalSrc);
+                } else {
+                    await abrirDialogo({
+                        titulo: 'Cartela não encontrada',
+                        mensagem: 'A imagem original desta cartela pertence a uma versão antiga e não pôde ser recuperada. Carregue a cartela novamente.',
+                        textoConfirmar: 'Entendi',
+                        textoCancelar: 'Fechar'
+                    });
                 }
             }
         });
 
         function iniciarModoManualPlanoB(srcImagem) {
+            imagemOriginalSrc = srcImagem;
+            persistirImagemOriginal();
             modoAtual = 'manual';
             containerVirtual.style.display = 'none';
             containerManual.style.display = 'flex';
-            localStorage.setItem('bingoModo', 'manual');
+            gravarLocalSeguro('bingoModo', 'manual');
 
             const tempImg = new Image();
             tempImg.onload = function() {
@@ -800,7 +2305,7 @@
         function salvarEstadoManual() {
             const estadoAtual = canvas.toDataURL();
             historico.push(estadoAtual);
-            try { localStorage.setItem('bingoSalvoManual', estadoAtual); } catch (e) {}
+            return persistirEstadoManual(estadoAtual);
         }
 
         btnDesfazer.addEventListener('click', () => {
@@ -808,71 +2313,175 @@
                 historico.pop();
                 const estadoAnterior = historico[historico.length - 1];
                 restaurarImagemManual(estadoAnterior);
-                localStorage.setItem('bingoSalvoManual', estadoAnterior);
+                persistirEstadoManual(estadoAnterior);
             }
         });
 
         // BOTÃO LIMPAR TUDO AGORA FAZ RESET TOTAL
-        btnLimpar.addEventListener('click', () => {
-            if (confirm("Tem a certeza que deseja limpar tudo e remover a cartela atual?")) {
+        btnLimpar.addEventListener('click', async () => {
+            const confirmou = await abrirDialogo({
+                titulo: 'Limpar tudo?',
+                mensagem: 'Tem a certeza que deseja limpar tudo e remover a cartela atual?',
+                textoConfirmar: 'Limpar Tudo',
+                perigo: true
+            });
+            if (confirmou) {
+                // Limpa somente os dados da partida. Tema, marcador e
+                // preferências visuais permanecem salvos.
+                await limparPersistenciaDaPartida();
                 
-                // 1. Limpa TODOS os dados locais gravados
-                localStorage.removeItem('bingoVirtual');
-                localStorage.removeItem('bingoNomeVirtual');
-                localStorage.removeItem('bingoHistoricoVirtual');
-                localStorage.removeItem('bingoModo');
-                localStorage.removeItem('bingoSalvoManual');
-                
-                // 2. Limpa a memória RAM
                 historicoVirtual = [];
                 historico = [];
                 imagemOriginalSrc = null;
                 
-                // 3. Volta o site para o estado de fábrica (Canvas Vazio)
                 modoAtual = 'manual';
                 containerVirtual.style.display = 'none';
                 containerManual.style.display = 'flex';
+                gradeBotoes.innerHTML = '';
+                nomeDisplay.innerText = 'JOGADOR';
                 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
         });
 
         function restaurarImagemManual(src) {
-            const img = new Image();
-            img.onload = () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                ctx.strokeStyle = "rgba(255, 0, 0, 0.85)";
-                ctx.lineWidth = sliderPincel.value;
-                ctx.lineCap = "round";
-                ctx.lineJoin = "round";
-            };
-            img.src = src;
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    ctx.strokeStyle = corDoTemaComAlpha('--brush-color', 0.88);
+                    ctx.lineWidth = sliderPincel.value;
+                    ctx.lineCap = "round";
+                    ctx.lineJoin = "round";
+                    resolve(true);
+                };
+                img.onerror = () => resolve(false);
+                img.src = src;
+            });
         }
 
-        window.onload = () => {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let reg of registrations) reg.unregister();
-                });
+        const APP_UPDATE_KEY = 'bingoAppBuildFingerprint';
+
+        async function gerarImpressaoDigital(texto) {
+            if (window.crypto && window.crypto.subtle) {
+                const bytes = new TextEncoder().encode(texto);
+                const digest = await window.crypto.subtle.digest('SHA-256', bytes);
+                return Array.from(new Uint8Array(digest))
+                    .map(byte => byte.toString(16).padStart(2, '0'))
+                    .join('');
             }
 
-            const modoGuardado = localStorage.getItem('bingoModo');
-            if (modoGuardado === 'virtual') {
-                const estadoVirtual = localStorage.getItem('bingoVirtual');
-                const nomeVirtual = localStorage.getItem('bingoNomeVirtual');
-                if(estadoVirtual) restaurarEstadoVirtual(estadoVirtual, nomeVirtual);
-            } else if (modoGuardado === 'manual' || !modoGuardado) {
-                modoAtual = 'manual';
-                containerVirtual.style.display = 'none';
-                containerManual.style.display = 'flex';
-                const salvoManual = localStorage.getItem('bingoSalvoManual');
-                if (salvoManual) {
-                    restaurarImagemManual(salvoManual);
-                    historico.push(salvoManual);
-                }
+            let hash = 2166136261;
+            for (let i = 0; i < texto.length; i++) {
+                hash ^= texto.charCodeAt(i);
+                hash = Math.imul(hash, 16777619);
             }
+            return (hash >>> 0).toString(16);
+        }
+
+        async function removerServiceWorkersDesteApp() {
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                const pastaDoApp = new URL('./', window.location.href).pathname;
+                await Promise.all(
+                    registrations
+                        .filter(reg => {
+                            const escopo = new URL(reg.scope).pathname;
+                            return pastaDoApp.startsWith(escopo) || escopo.startsWith(pastaDoApp);
+                        })
+                        .map(reg => reg.unregister())
+                );
+            }
+        }
+
+        async function verificarAtualizacaoAoEntrar() {
+            try {
+                await removerServiceWorkersDesteApp();
+
+                const arquivosDoApp = [
+                    './index.html',
+                    './styles.css',
+                    './theme-system.js'
+                ];
+                const identificador = Date.now().toString();
+                const conteudosAtuais = await Promise.all(
+                    arquivosDoApp.map(async arquivo => {
+                        const urlAtual = new URL(arquivo, window.location.href);
+                        urlAtual.searchParams.set('_verificar', identificador);
+                        const resposta = await fetch(urlAtual.href, {
+                            cache: 'no-store',
+                            headers: { 'Cache-Control': 'no-cache' }
+                        });
+                        if (!resposta.ok) throw new Error('Arquivo indisponível');
+                        return resposta.text();
+                    })
+                );
+
+                const novaImpressao = await gerarImpressaoDigital(conteudosAtuais.join('\n---\n'));
+                const impressaoAnterior = localStorage.getItem(APP_UPDATE_KEY);
+
+                if (!impressaoAnterior) {
+                    localStorage.setItem(APP_UPDATE_KEY, novaImpressao);
+                    return;
+                }
+
+                if (impressaoAnterior !== novaImpressao) {
+                    // Se a pessoa já começou a usar, a atualização fica para a próxima entrada.
+                    if (houveInteracaoNestaSessao) return;
+
+                    localStorage.setItem(APP_UPDATE_KEY, novaImpressao);
+                    const urlRecarregada = new URL(window.location.href);
+                    urlRecarregada.searchParams.set('versao', novaImpressao.slice(0, 10));
+                    window.location.replace(urlRecarregada.href);
+                }
+            } catch (erro) {
+                // O app continua funcionando normalmente mesmo sem rede.
+            }
+        }
+
+        async function restaurarModoManualPersistido() {
+            modoAtual = 'manual';
+            containerVirtual.style.display = 'none';
+            containerManual.style.display = 'flex';
+
+            const persistenciaManual = await carregarPersistenciaManual();
+            historico = persistenciaManual.historicoSalvo;
+
+            if (persistenciaManual.estadoAtual) {
+                await restaurarImagemManual(persistenciaManual.estadoAtual);
+                persistirEstadoManual(persistenciaManual.estadoAtual);
+            }
+        }
+
+        window.onload = async () => {
+            restaurarEspessuraPincel();
+            imagemOriginalSrc = await carregarImagemOriginalPersistida();
+
+            const modoGuardado = lerLocalSeguro('bingoModo');
+            if (modoGuardado === 'virtual') {
+                const estadoVirtual = lerLocalSeguro('bingoVirtual');
+                const nomeVirtual = lerLocalSeguro('bingoNomeVirtual');
+
+                if (estadoVirtual) {
+                    try {
+                        restaurarEstadoVirtual(estadoVirtual, nomeVirtual);
+                    } catch (erro) {
+                        removerLocalSeguro('bingoModo');
+                        await restaurarModoManualPersistido();
+                    }
+                } else {
+                    removerLocalSeguro('bingoModo');
+                    await restaurarModoManualPersistido();
+                }
+            } else {
+                modoAtual = 'manual';
+                await restaurarModoManualPersistido();
+            }
+
+            verificarAtualizacaoAoEntrar();
         };
     </script>
+    <script src="./theme-system.js?v=20260728-4"></script>
 </body>
 </html>
