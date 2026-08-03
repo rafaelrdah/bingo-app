@@ -1440,6 +1440,7 @@
         let identificadorLeituraCartela = 0;
 
         const TEMPO_LIMITE_LEITURA_CARTELA = 30000;
+        const LIMITE_HISTORICO_MANUAL = 30;
 
         const BANCO_PERSISTENCIA = 'bingoMarcadorPersistencia';
         const VERSAO_BANCO_PERSISTENCIA = 1;
@@ -1459,6 +1460,8 @@
 
         let bancoPersistenciaPromise = null;
         let filaPersistencia = Promise.resolve();
+        let persistenciaManualEmAndamento = null;
+        let persistenciaManualPendente = null;
 
         function abrirBancoPersistencia() {
             if (!window.indexedDB) return Promise.resolve(null);
@@ -1623,32 +1626,68 @@
             return lerLocalSeguro('bingoImagemOriginal');
         }
 
-        function persistirEstadoManual(estadoAtual) {
-            const historicoParaSalvar = historico.slice();
-
+        async function gravarPersistenciaManual(snapshot) {
             return enfileirarPersistencia(async () => {
                 const salvouEstado = await gravarDadoPersistente(
                     CHAVE_ESTADO_MANUAL,
-                    estadoAtual
+                    snapshot.estadoAtual
                 );
                 const salvouHistorico = await gravarDadoPersistente(
                     CHAVE_HISTORICO_MANUAL,
-                    historicoParaSalvar
+                    snapshot.historicoParaSalvar
                 );
 
-                gravarLocalSeguro('bingoSalvoManual', estadoAtual);
+                if (salvouEstado) {
+                    removerLocalSeguro('bingoSalvoManual');
+                } else {
+                    gravarLocalSeguro('bingoSalvoManual', snapshot.estadoAtual);
+                }
 
                 if (salvouHistorico) {
                     removerLocalSeguro('bingoHistoricoManual');
                 } else {
                     gravarLocalSeguro(
                         'bingoHistoricoManual',
-                        JSON.stringify(historicoParaSalvar)
+                        JSON.stringify(snapshot.historicoParaSalvar)
                     );
                 }
 
                 return salvouEstado && salvouHistorico;
             });
+        }
+
+        function processarPersistenciaManual() {
+            if (persistenciaManualEmAndamento) {
+                return persistenciaManualEmAndamento;
+            }
+
+            persistenciaManualEmAndamento = (async () => {
+                let resultado = true;
+
+                while (persistenciaManualPendente) {
+                    const snapshot = persistenciaManualPendente;
+                    persistenciaManualPendente = null;
+                    resultado = await gravarPersistenciaManual(snapshot);
+                }
+
+                return resultado;
+            })().finally(() => {
+                persistenciaManualEmAndamento = null;
+                if (persistenciaManualPendente) {
+                    processarPersistenciaManual();
+                }
+            });
+
+            return persistenciaManualEmAndamento;
+        }
+
+        function persistirEstadoManual(estadoAtual) {
+            persistenciaManualPendente = {
+                estadoAtual,
+                historicoParaSalvar: historico.slice(-LIMITE_HISTORICO_MANUAL)
+            };
+
+            return processarPersistenciaManual();
         }
 
         async function carregarPersistenciaManual() {
@@ -1664,7 +1703,9 @@
             }
 
             const historicoValido = Array.isArray(historicoSalvo)
-                ? historicoSalvo.filter(item => typeof item === 'string' && item)
+                ? historicoSalvo
+                    .filter(item => typeof item === 'string' && item)
+                    .slice(-LIMITE_HISTORICO_MANUAL)
                 : [];
 
             if (historicoValido.length === 0 && estadoAtual) {
@@ -1679,6 +1720,10 @@
         }
 
         async function limparPersistenciaDaPartida() {
+            persistenciaManualPendente = null;
+            if (persistenciaManualEmAndamento) {
+                await persistenciaManualEmAndamento;
+            }
             await enfileirarPersistencia(apagarDadosGrandesDaPartida);
             CHAVES_LOCAIS_DA_PARTIDA.forEach(removerLocalSeguro);
         }
@@ -1906,15 +1951,15 @@
         }
 
         async function mostrarAvisoDeLeitura(mensagem) {
-            const recarregar = await abrirDialogo({
+            const escolherNovamente = await abrirDialogo({
                 titulo: 'Leitura interrompida',
                 mensagem,
-                textoConfirmar: 'Recarregar agora',
+                textoConfirmar: 'Escolher novamente',
                 textoCancelar: 'Fechar'
             });
 
-            if (recarregar) {
-                window.location.reload();
+            if (escolherNovamente) {
+                inputImagem.click();
             }
         }
 
@@ -1927,7 +1972,7 @@
                 temporizadorLeituraCartela = null;
                 loadingQr.style.display = 'none';
                 mostrarAvisoDeLeitura(
-                    'A leitura da cartela demorou mais de 30 segundos. Recarregue a página e tente novamente.'
+                    'A leitura da cartela demorou mais de 30 segundos. Escolha a cartela novamente.'
                 );
             }, TEMPO_LIMITE_LEITURA_CARTELA);
         }
@@ -1939,7 +1984,7 @@
             cancelarTempoLimiteLeitura();
             loadingQr.style.display = 'none';
             mostrarAvisoDeLeitura(
-                'Não foi possível carregar o leitor da cartela. Recarregue a página e tente novamente.'
+                'Não foi possível abrir a imagem da cartela. Escolha o arquivo novamente.'
             );
         }
 
@@ -1999,23 +2044,17 @@
             const file = e.target.files[0];
             const reader = new FileReader();
             
-            reader.onload = async function(event) {
+            reader.onload = function(event) {
                 if (identificador !== identificadorLeituraCartela) return;
 
                 imagemOriginalSrc = event.target.result;
-                await persistirImagemOriginal();
-                if (identificador !== identificadorLeituraCartela) return;
+                persistirImagemOriginal();
                 
                 lerQRCode(imagemOriginalSrc, (resultado) => {
                     if (identificador !== identificadorLeituraCartela) return;
 
                     cancelarTempoLimiteLeitura();
                     loadingQr.style.display = 'none';
-
-                    if (resultado.erroLeitura) {
-                        concluirLeituraComErro(identificador);
-                        return;
-                    }
 
                     identificadorLeituraCartela += 1;
                     
@@ -2208,7 +2247,6 @@
 
         function iniciarModoManualPlanoB(srcImagem) {
             imagemOriginalSrc = srcImagem;
-            persistirImagemOriginal();
             modoAtual = 'manual';
             containerVirtual.style.display = 'none';
             containerManual.style.display = 'flex';
@@ -2305,6 +2343,9 @@
         function salvarEstadoManual() {
             const estadoAtual = canvas.toDataURL();
             historico.push(estadoAtual);
+            if (historico.length > LIMITE_HISTORICO_MANUAL) {
+                historico.splice(0, historico.length - LIMITE_HISTORICO_MANUAL);
+            }
             return persistirEstadoManual(estadoAtual);
         }
 
